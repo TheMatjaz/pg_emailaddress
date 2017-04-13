@@ -1,0 +1,5 @@
+# PostgreSQL e-mail address extension
+comment = 'E-mail address datatype'
+default_version = '0.0.0'
+module_pathname = '$libdir/pg_emailaddress'
+relocatable = true
