@@ -83,7 +83,7 @@ CREATE OR REPLACE FUNCTION emailaddress_get_username
     IMMUTABLE
     LANGUAGE sql
     AS $body$
-        SELECT lower(trim(substring(email_address FROM '^(.+)@')));
+        SELECT emailaddress_clean_text(substring(email_address FROM '^(.+)@'));
     $body$;
 
 CREATE OR REPLACE FUNCTION emailaddress_get_username_no_periods
@@ -93,8 +93,8 @@ CREATE OR REPLACE FUNCTION emailaddress_get_username_no_periods
     IMMUTABLE
     LANGUAGE sql
     AS $body$
-        SELECT lower(trim(substring(replace(email_address, '.', '')
-                                            FROM '^(.+)@')));
+        SELECT emailaddress_clean_text(
+                   substring(replace(email_address, '.', '') FROM '^(.+)@'));
     $body$;
     -- Returns the substring up to the last @ symbol filtering the
 
@@ -105,7 +105,7 @@ CREATE OR REPLACE FUNCTION emailaddress_get_hostname
     IMMUTABLE
     LANGUAGE sql
     AS $body$
-        SELECT lower(trim(substring(email_address FROM '[^@]+$')));
+        SELECT emailaddress_clean_text(substring(email_address FROM '[^@]+$'));
     $body$;
 
 CREATE OR REPLACE FUNCTION emailaddress_set_username
@@ -115,7 +115,7 @@ CREATE OR REPLACE FUNCTION emailaddress_set_username
     IMMUTABLE
     LANGUAGE sql
     AS $body$
-        SELECT (lower(trim(new_username))
+        SELECT (emailaddress_clean_text(new_username)
                || '@' 
                || emailaddress_get_hostname(email_address)) :: emailaddress;
     $body$;
@@ -127,9 +127,10 @@ CREATE OR REPLACE FUNCTION emailaddress_set_username_no_periods
     IMMUTABLE
     LANGUAGE sql
     AS $body$
-        SELECT (lower(replace(trim(new_username), '.', ''))
+        SELECT (emailaddress_clean_text(replace(new_username, '.', ''))
                || '@'
-               || emailaddress_get_hostname(email_address)) :: emailaddress;
+               || emailaddress_get_hostname(email_address)
+               ) :: emailaddress;
     $body$;
 
 CREATE OR REPLACE FUNCTION emailaddress_set_hostname
@@ -141,7 +142,7 @@ CREATE OR REPLACE FUNCTION emailaddress_set_hostname
     AS $body$
         SELECT (emailaddress_get_username(email_address)
                || '@' 
-               || lower(trim(new_hostname))) :: emailaddress;
+               || emailaddress_clean_text(new_hostname)) :: emailaddress;
     $body$;
 
 CREATE OR REPLACE FUNCTION emailaddress_build
@@ -151,9 +152,21 @@ CREATE OR REPLACE FUNCTION emailaddress_build
     IMMUTABLE
     LANGUAGE sql
     AS $body$
-        SELECT lower(trim(username)
+        SELECT (emailaddress_clean_text(username)
                || '@' 
-               || trim(hostname_with_tld)) :: emailaddress;
+               || emailaddress_clean_text(hostname_with_tld)) :: emailaddress;
+    $body$;
+
+CREATE OR REPLACE FUNCTION emailaddress_build_no_periods
+    (username text, hostname_with_tld text)
+    RETURNS emailaddress
+    RETURNS NULL ON NULL INPUT
+    IMMUTABLE
+    LANGUAGE sql
+    AS $body$
+        SELECT (replace(emailaddress_clean_text(username), '.', '')
+               || '@' 
+               || emailaddress_clean_text(hostname_with_tld)) :: emailaddress;
     $body$;
 
 CREATE OR REPLACE FUNCTION emailaddress_build
@@ -163,32 +176,36 @@ CREATE OR REPLACE FUNCTION emailaddress_build
     IMMUTABLE
     LANGUAGE sql
     AS $body$
-        SELECT lower(trim(username) 
-                     || '@'
-                     || trim(hostname_without_tld)
-                     || '.'
-                     || trim(tld)) :: emailaddress;
+        SELECT (emailaddress_clean_text(username) 
+               || '@'
+               || emailaddress_clean_text(hostname_without_tld)
+               || '.'
+               || emailaddress_clean_text(tld)) :: emailaddress;
     $body$;
 
-CREATE OR REPLACE FUNCTION emailaddress_envelope
-    (email_address emailaddress)
-    RETURNS text
-    RETURNS NULL ON NULL INPUT
-    IMMUTABLE
-    LANGUAGE sql
-    AS $body$
-        SELECT '<' || lower(trim(email_address)) || '>';
-    $body$;
-
-CREATE OR REPLACE FUNCTION emailaddress_trim_envelope
-    (email_address_with_envelope text)
+CREATE OR REPLACE FUNCTION emailaddress_build_no_periods
+    (username text, hostname_without_tld text, tld text)
     RETURNS emailaddress
     RETURNS NULL ON NULL INPUT
     IMMUTABLE
     LANGUAGE sql
     AS $body$
-        SELECT lower(trim('<>' FROM email_address_with_envelope))
-               :: emailaddress;
+        SELECT (replace(emailaddress_clean_text(username), '.', '')
+               || '@'
+               || emailaddress_clean_text(hostname_without_tld)
+               || '.'
+               || emailaddress_clean_text(tld)) :: emailaddress;
+    $body$;
+
+CREATE OR REPLACE FUNCTION emailaddress_add_brackets
+    (email_address emailaddress)
+    RETURNS emailaddress
+    RETURNS NULL ON NULL INPUT
+    IMMUTABLE
+    LANGUAGE sql
+    AS $body$
+        SELECT ('<' || emailaddress_clean(email_address) || '>')
+               ::emailaddress;
     $body$;
 
 CREATE OR REPLACE FUNCTION emailaddress_gt
