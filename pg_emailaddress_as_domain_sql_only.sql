@@ -334,7 +334,7 @@ CREATE OPERATOR > (
     LEFTARG = emailaddress,
     RIGHTARG = emailaddress,
     COMMUTATOR = <,
-    NEGATOR = <=,
+    NEGATOR = =<,
     RESTRICT = scalargtsel,
     JOIN = scalargtjoinsel,
     PROCEDURE = emailaddress_gt
