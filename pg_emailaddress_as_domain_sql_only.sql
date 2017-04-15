@@ -208,6 +208,28 @@ CREATE OR REPLACE FUNCTION emailaddress_add_brackets
                ::emailaddress;
     $body$;
 
+CREATE OR REPLACE FUNCTION emailaddress_eq
+    (one emailaddress, two emailaddress)
+    RETURNS boolean
+    RETURNS NULL ON NULL INPUT
+    IMMUTABLE
+    LANGUAGE sql
+    AS $body$
+        SELECT emailaddress_clean_text(one) 
+               = emailaddress_clean_text(two);
+    $body$;
+
+CREATE OR REPLACE FUNCTION emailaddress_ne
+    (one emailaddress, two emailaddress)
+    RETURNS boolean
+    RETURNS NULL ON NULL INPUT
+    IMMUTABLE
+    LANGUAGE sql
+    AS $body$
+        SELECT emailaddress_clean_text(one) 
+               <> emailaddress_clean_text(two);
+    $body$;
+
 CREATE OR REPLACE FUNCTION emailaddress_gt
     (one emailaddress, two emailaddress)
     RETURNS boolean
@@ -348,6 +370,26 @@ CREATE OPERATOR *@ (
 CREATE OPERATOR ~*@ (
     RIGHTARG   = emailaddress,
     PROCEDURE  = emailaddress_get_username_no_periods
+);
+
+CREATE OPERATOR = (
+    LEFTARG = emailaddress,
+    RIGHTARG = emailaddress,
+    COMMUTATOR = =,
+    NEGATOR = <>,
+    RESTRICT = scalargtsel,
+    JOIN = scalargtjoinsel,
+    PROCEDURE = emailaddress_eq
+);
+
+CREATE OPERATOR <> (
+    LEFTARG = emailaddress,
+    RIGHTARG = emailaddress,
+    COMMUTATOR = <>,
+    NEGATOR = =,
+    RESTRICT = scalargtsel,
+    JOIN = scalargtjoinsel,
+    PROCEDURE = emailaddress_ne
 );
 
 CREATE OPERATOR < (
