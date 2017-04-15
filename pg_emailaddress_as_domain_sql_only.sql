@@ -290,6 +290,20 @@ CREATE OR REPLACE FUNCTION emailaddress_le
                       <= emailaddress_get_username(two));
     $body$;
 
+CREATE OR REPLACE FUNCTION emailaddress_compare
+    (one emailaddress, two emailaddress)
+    RETURNS integer
+    RETURNS NULL ON NULL INPUT
+    IMMUTABLE
+    LANGUAGE sql
+    AS $body$
+        SELECT CASE
+               WHEN emailaddress_lt(one, two) THEN -1
+               WHEN emailaddress_eq(one, two) THEN 0
+               ELSE 1
+               END;
+    $body$;
+
 CREATE OR REPLACE FUNCTION emailaddress_eq_hostname
     (one emailaddress, two emailaddress)
     RETURNS boolean
@@ -492,14 +506,19 @@ CREATE OPERATOR ~<>@ (
     PROCEDURE = emailaddress_ne_username_no_periods
 );
 
--- CREATE OPERATOR CLASS emailaddress_ops
---        DEFAULT FOR TYPE emailaddress
---        USING btree AS
---        OPERATOR 1 <  ,
---        OPERATOR 2 <= ,
---        OPERATOR 3 =  ,
---        OPERATOR 4 >= ,
---        OPERATOR 5 >  ,
---        FUNCTION 1 emailaddress_eq(emailaddress, emailaddress);
+CREATE OPERATOR CLASS emailaddress_ops
+       DEFAULT FOR TYPE emailaddress
+       USING btree AS
+       OPERATOR 1 <  (emailaddress, emailaddress),
+       OPERATOR 2 =< (emailaddress, emailaddress),
+       OPERATOR 3 =  (emailaddress, emailaddress),
+       OPERATOR 4 >= (emailaddress, emailaddress),
+       OPERATOR 5 >  (emailaddress, emailaddress),
+       FUNCTION 1 emailaddress_compare(emailaddress, emailaddress);
+-- This query maps the defined operators for the emailaddress domain
+-- to the index interface of B-Tree indices. In this way the index knows which
+-- operators use for which operatsions (1=lt, 2=le, 3=eq, 4=ge, 5=gt).
+-- Described in more detail at 
+-- https://www.postgresql.org/docs/current/static/xindex.html#XINDEX-BTREE-STRAT-TABLE 
 
 COMMIT;
