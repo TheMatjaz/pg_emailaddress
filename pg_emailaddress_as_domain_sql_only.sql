@@ -31,7 +31,6 @@ function uses a minimalistic approach:
   DROP DOMAIN IF EXISTS emailaddress CASCADE;
 CREATE DOMAIN emailaddress
        AS text
-       -- COLLATE ???
        DEFAULT NULL
        CONSTRAINT legal_email_address_format
             CHECK (seems_email_address(VALUE));
@@ -39,9 +38,43 @@ CREATE DOMAIN emailaddress
 COMMENT ON DOMAIN emailaddress IS
 'String containing an e-mail address.
 
-Defaults to NULL, uses a C collate and performs a minimal check of the content.
+Defaults to NULL, performs a minimal check of the content.
 Be aware that any string matching the seems_email_address(text) function can be
 part of this domain.';
+
+CREATE OR REPLACE FUNCTION emailaddress_clean_text
+    (email_address text)
+    RETURNS text
+    RETURNS NULL ON NULL INPUT
+    IMMUTABLE
+    LANGUAGE sql
+    AS $body$
+        SELECT lower(trim(E' <>\n\r\t\f\v' FROM email_address));
+    $body$;
+
+CREATE OR REPLACE FUNCTION emailaddress_clean
+    (email_address emailaddress)
+    RETURNS emailaddress
+    RETURNS NULL ON NULL INPUT
+    IMMUTABLE
+    LANGUAGE sql
+    AS $body$
+        SELECT emailaddress_clean_text(email_address) :: emailaddress;
+    $body$;
+
+CREATE OR REPLACE FUNCTION emailaddress_clean_no_periods
+    (email_address emailaddress)
+    RETURNS emailaddress
+    RETURNS NULL ON NULL INPUT
+    IMMUTABLE
+    LANGUAGE sql
+    AS $body$
+        SELECT emailaddress_clean_text(
+                   substring(replace(email_address, '.', '') FROM '^(.+)@')
+                   || '@'
+                   || substring(email_address FROM '[^@]+$')
+               ) :: emailaddress;
+    $body$;
 
 CREATE OR REPLACE FUNCTION emailaddress_get_username
     (email_address emailaddress)
