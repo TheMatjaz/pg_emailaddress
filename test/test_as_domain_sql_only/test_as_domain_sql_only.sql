@@ -196,10 +196,47 @@ SELECT NOT 'abc@postgresql.org'::emailaddress = 'abd@p.org'::emailaddress;
 SELECT     'abc@postgresql.org'::emailaddress @= 'z@postgresql.org'::emailaddress;
 SELECT NOT 'abc@postgresql.org'::emailaddress @= 'z@abc.org'::emailaddress;
 
+SELECT NOT 'abc@postgresql.org'::emailaddress @<> 'z@postgresql.org'::emailaddress;
+SELECT     'abc@postgresql.org'::emailaddress @<> 'z@abc.org'::emailaddress;
+
 SELECT     'abc@postgresql.org'::emailaddress =@ 'abc@z.org'::emailaddress;
 SELECT     'abc@postgresql.org'::emailaddress =@ 'abc@postgresql.org'::emailaddress;
 SELECT NOT 'abc@postgresql.org'::emailaddress =@ 'z@postgresql.org'::emailaddress;
 SELECT NOT 'abc@postgresql.org'::emailaddress =@ 'z@z.org'::emailaddress;
+
+SELECT NOT 'abc@postgresql.org'::emailaddress <>@ 'abc@z.org'::emailaddress;
+SELECT NOT 'abc@postgresql.org'::emailaddress <>@ 'abc@postgresql.org'::emailaddress;
+SELECT     'abc@postgresql.org'::emailaddress <>@ 'z@postgresql.org'::emailaddress;
+SELECT     'abc@postgresql.org'::emailaddress <>@ 'z@z.org'::emailaddress;
+
+SELECT     'a.bc@postgresql.org'::emailaddress ~=@ 'a.bc@postgresql.org'::emailaddress;
+SELECT     'a.bc@postgresql.org'::emailaddress ~=@ 'abc@postgresql.org'::emailaddress;
+SELECT     'abc@postgresql.org'::emailaddress ~=@ 'ab.c@postgresql.org'::emailaddress;
+SELECT     'abc@postgresql.org'::emailaddress ~=@ 'abc@postgresql.org'::emailaddress;
+SELECT NOT 'a.bc@postgresql.org'::emailaddress ~=@ 'z.@postgresql.org'::emailaddress;
+SELECT NOT 'a.bc@postgresql.org'::emailaddress ~=@ 'z@postgresql.org'::emailaddress;
+SELECT NOT 'abc@postgresql.org'::emailaddress ~=@ 'z.@postgresql.org'::emailaddress;
+SELECT NOT 'abc@postgresql.org'::emailaddress ~=@ 'z@postgresql.org'::emailaddress;
+SELECT NOT 'a.bc@postgresql.org'::emailaddress ~=@ 'z@z.org'::emailaddress;
+SELECT NOT 'abc@postgresql.org'::emailaddress ~=@ 'z.@z.org'::emailaddress;
+SELECT NOT 'a.bc@postgresql.org'::emailaddress ~=@ 'z.@z.org'::emailaddress;
+SELECT NOT 'abc@postgresql.org'::emailaddress ~=@ 'z@z.org'::emailaddress;
+
+SELECT NOT 'a.bc@postgresql.org'::emailaddress ~<>@ 'abc@z.org'::emailaddress;
+SELECT NOT 'abc@postgresql.org'::emailaddress ~<>@ 'a.bc@z.org'::emailaddress;
+SELECT NOT 'a.bc@postgresql.org'::emailaddress ~<>@ 'a.bc@z.org'::emailaddress;
+SELECT NOT 'abc@postgresql.org'::emailaddress ~<>@ 'abc@z.org'::emailaddress;
+SELECT NOT 'a.bc@postgresql.org'::emailaddress ~<>@ 'abc@postgresql.org'::emailaddress;
+SELECT NOT 'abc@postgresql.org'::emailaddress ~<>@ 'a.bc@postgresql.org'::emailaddress;
+SELECT NOT 'a.bc@postgresql.org'::emailaddress ~<>@ 'a.bc@postgresql.org'::emailaddress;
+SELECT NOT 'abc@postgresql.org'::emailaddress ~<>@ 'abc@postgresql.org'::emailaddress;
+SELECT     'a.bc@postgresql.org'::emailaddress ~<>@ 'z@postgresql.org'::emailaddress;
+SELECT     'abc@postgresql.org'::emailaddress ~<>@ 'z.@postgresql.org'::emailaddress;
+SELECT     'a.bc@postgresql.org'::emailaddress ~<>@ 'z.@postgresql.org'::emailaddress;
+SELECT     'a.bc@postgresql.org'::emailaddress ~<>@ 'z@postgresql.org'::emailaddress;
+SELECT     'abc@postgresql.org'::emailaddress ~<>@ 'z.@z.org'::emailaddress;
+SELECT     'a.bc@postgresql.org'::emailaddress ~<>@ 'z.@z.org'::emailaddress;
+SELECT     'abc@postgresql.org'::emailaddress ~<>@ 'z@z.org'::emailaddress;
 
 -- Comparison function used for B-Tree indexing.
 SELECT emailaddress_compare('aaa@postgresql.org', 'aaa@postgresql.org') = 0;
