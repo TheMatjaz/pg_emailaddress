@@ -214,9 +214,13 @@ SELECT emailaddress_compare('aaa@z.org', 'zzz@a.org') = 1;
 
 
 -- Sorting.
-SELECT expected_position, email_address
-  FROM (
-VALUES (9,  'pg.sql@postgresql.org'::emailaddress),
+CREATE TEMPORARY TABLE emailaddress_sorting_test (
+       expected_position integer,
+       email_address     emailaddress
+);
+INSERT INTO emailaddress_sorting_test
+       (expected_position, email_address)
+VALUES (9, 'pg.sql@postgresql.org'),
        (10,'pgsql@postgresql.org'),
        (8, '"this is a valid address"@postgresql.org'),
        (7, '"this is @lso v@lid"@postgresql.org'),
@@ -225,6 +229,7 @@ VALUES (9,  'pg.sql@postgresql.org'::emailaddress),
        (5, 'azz@localhost'),
        (3, 'aaa@localhost'),
        (4, 'abc@localhost'),
-       (1, 'pgsql@.'))
-    AS temp_table (expected_position, email_address)
- ORDER BY email_address ASC;
+       (1, 'pgsql@.');
+SELECT expected_position, email_address
+  FROM emailaddress_sorting_test
+ ORDER BY @* email_address, *@ email_address ASC;
